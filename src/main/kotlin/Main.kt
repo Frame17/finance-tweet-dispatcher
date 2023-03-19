@@ -1,7 +1,29 @@
-fun main(args: Array<String>) {
-    println("Hello World!")
+import load.DatasetLoader
+import org.apache.spark.ml.classification.NaiveBayes
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.jetbrains.kotlinx.spark.api.withSpark
+import preprocess.TweetPreprocessor
 
-    // Try adding program arguments via Run/Debug configuration.
-    // Learn more about running applications: https://www.jetbrains.com/help/idea/running-applications.html.
-    println("Program arguments: ${args.joinToString()}")
+
+fun main() {
+    withSpark {
+        val tweetPreprocessor = TweetPreprocessor()
+        val datasetLoader = DatasetLoader(spark)
+        val (tweetsTrain, tweetsVal) = datasetLoader.load()
+            .let { (train, valid) -> train.run(tweetPreprocessor) to valid.run(tweetPreprocessor) }
+
+        val naiveBayes = NaiveBayes()
+            .setSmoothing(1.0)
+            .setModelType("multinomial")
+            .setLabelCol("class")
+            .fit(tweetsTrain)
+
+        val evaluator = MulticlassClassificationEvaluator()
+            .setLabelCol("class")
+            .setPredictionCol("prediction")
+            .setMetricName("accuracy")
+
+        val predictionsBayes = naiveBayes.transform(tweetsVal)
+        println("Prediction accuracy = " + evaluator.evaluate(predictionsBayes))
+    }
 }
