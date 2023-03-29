@@ -2,7 +2,7 @@
 
 This project is a financial tweet dispatcher built with Kotlin and Spark using Kafka.
 The dispatcher streams the tweets from the general Kafka topic, 
-classifies and routes them to different Kafka topics based on the classification result.
+classifies and routes them to specific Kafka topics based on the classification result.
 A simple classifier is trained beforehand on a financial tweet dataset.
 
 ## Dataset
